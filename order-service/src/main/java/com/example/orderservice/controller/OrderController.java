@@ -1,8 +1,10 @@
 package com.example.orderservice.controller;
 
-import com.example.orderservice.model.Order;
-import com.example.orderservice.repository.OrderRepository;
+import com.example.orderservice.dto.OrderRequestDTO;
+import com.example.orderservice.dto.OrderResponseDTO;
+import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,15 +13,22 @@ import java.util.List;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
-    private final OrderRepository orderRepository;
+
+    private final OrderService orderService;
 
     @PostMapping
-    public Order createOrder(@RequestBody Order order) {
-        return orderRepository.save(order);
+    @ResponseStatus(HttpStatus.CREATED)
+    public OrderResponseDTO createOrder(@RequestBody OrderRequestDTO requestDTO) {
+        return orderService.createOrder(requestDTO);
     }
 
     @GetMapping
-    public List<Order> findAll() {
-        return  orderRepository.findAll();
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderService.getAllOrders();
+    }
+
+    @GetMapping("/{id}")
+    public OrderResponseDTO getOrderById(@PathVariable Long id) {
+        return orderService.getOrderById(id);
     }
 }

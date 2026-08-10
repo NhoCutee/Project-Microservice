@@ -1,8 +1,10 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.model.User;
-import com.example.userservice.repository.UserRepository;
+import com.example.userservice.dto.UserRequestDTO;
+import com.example.userservice.dto.UserResponseDTO;
+import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,15 +13,22 @@ import java.util.List;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-    private final UserRepository userRepository;
+
+    private final UserService userService;
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userRepository.save(user);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponseDTO createUser(@RequestBody UserRequestDTO requestDTO) {
+        return userService.createUser(requestDTO);
     }
 
     @GetMapping
-    public List<User> getAllUser() {
-        return userRepository.findAll();
+    public List<UserResponseDTO> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public UserResponseDTO getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 }
