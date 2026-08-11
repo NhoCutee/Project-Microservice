@@ -1,6 +1,7 @@
 package com.example.orderservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,12 +11,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonPropertyOrder({"orderId","product","price", "user"})
 public class OrderResponseDTO {
-    private Long id;
 
-    @JsonProperty("userId")
-    private Long userId;
+    @JsonProperty("orderId")
+    private Long id;
 
     private String product;
     private Double price;
+
+    private UserDto user;
 }

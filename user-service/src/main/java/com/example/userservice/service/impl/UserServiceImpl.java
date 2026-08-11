@@ -1,5 +1,7 @@
 package com.example.userservice.service.impl;
 
+import com.example.userservice.client.OrderClient;
+import com.example.userservice.dto.OrderDto;
 import com.example.userservice.dto.UserRequestDTO;
 import com.example.userservice.dto.UserResponseDTO;
 import com.example.userservice.model.User;
@@ -8,6 +10,7 @@ import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final OrderClient orderClient;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
@@ -32,7 +36,11 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(this::mapToResponseDTO)
+                .map(user -> UserResponseDTO.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -44,10 +52,18 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponseDTO mapToResponseDTO(User user) {
+        List<OrderDto> orderDto;
+        try{
+            orderDto = orderClient.getOrderByUserId(user.getId());
+        }catch (Exception e){
+            orderDto = Collections.emptyList();
+        }
         return UserResponseDTO.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .order(orderDto)
                 .build();
     }
+
 }

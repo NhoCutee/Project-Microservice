@@ -1,7 +1,9 @@
 package com.example.orderservice.service.impl;
 
+import com.example.orderservice.client.UserClient;
 import com.example.orderservice.dto.OrderRequestDTO;
 import com.example.orderservice.dto.OrderResponseDTO;
+import com.example.orderservice.dto.UserDto;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.OrderRepository;
 import com.example.orderservice.service.OrderService;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final UserClient userClient;
 
     @Override
     public OrderResponseDTO createOrder(OrderRequestDTO requestDTO) {
@@ -44,12 +47,31 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponseDTO(order);
     }
 
+    @Override
+    public List<OrderResponseDTO> getOrdersByUserId(Long userId) {
+        return orderRepository
+                .findByUserId(userId)
+                .stream()
+                .map(order ->  OrderResponseDTO.builder()
+                        .id(order.getId())
+                        .product(order.getProduct())
+                        .price(order.getPrice())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     private OrderResponseDTO mapToResponseDTO(Order order) {
+        UserDto userDto;
+        try{
+            userDto = userClient.getUserById(order.getUserId());
+        }catch (Exception e){
+            userDto = new UserDto(order.getUserId(), "N/A", "N/A");
+        }
         return OrderResponseDTO.builder()
                 .id(order.getId())
-                .userId(order.getUserId())
                 .product(order.getProduct())
                 .price(order.getPrice())
+                .user(userDto)
                 .build();
     }
 }
