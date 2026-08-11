@@ -8,6 +8,8 @@ import com.example.userservice.model.User;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -22,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final OrderClient orderClient;
 
     @Override
+    @CacheEvict(value = "allUser", allEntries = true)
     public UserResponseDTO createUser(UserRequestDTO requestDTO) {
         User user = User.builder()
                 .name(requestDTO.getName())
@@ -33,7 +36,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "allUser", key = "'all'")
     public List<UserResponseDTO> getAllUsers() {
+        System.out.println("Querying DB.....");
         return userRepository.findAll()
                 .stream()
                 .map(user -> UserResponseDTO.builder()
@@ -45,6 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users", key = "#id")
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
