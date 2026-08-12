@@ -8,6 +8,8 @@ import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.OrderRepository;
 import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserClient userClient;
 
     @Override
+    @CacheEvict(value = "allItem", allEntries = true)
     public OrderResponseDTO createOrder(OrderRequestDTO requestDTO) {
         Order order = Order.builder()
                 .userId(requestDTO.getUserId())
@@ -33,14 +36,31 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Cacheable(value = "allItem", key = "'all'")
     public List<OrderResponseDTO> getAllOrders() {
+        System.out.println("Querying DB.....");
         return orderRepository.findAll()
                 .stream()
-                .map(this::mapToResponseDTO)
+                .map(order -> {
+                    UserDto userDto;
+                    try {
+                        userDto = userClient.getUserById(order.getUserId());
+                    } catch (Exception e) {
+                        userDto = new UserDto(order.getUserId(), "N/A", "N/A");
+                    }
+
+                    return OrderResponseDTO.builder()
+                            .id(order.getId())
+                            .product(order.getProduct())
+                            .price(order.getPrice())
+                            .user(userDto)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = "item", key = "#id")
     public OrderResponseDTO getOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
@@ -52,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository
                 .findByUserId(userId)
                 .stream()
-                .map(order ->  OrderResponseDTO.builder()
+                .map(order -> OrderResponseDTO.builder()
                         .id(order.getId())
                         .product(order.getProduct())
                         .price(order.getPrice())
@@ -62,9 +82,9 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderResponseDTO mapToResponseDTO(Order order) {
         UserDto userDto;
-        try{
+        try {
             userDto = userClient.getUserById(order.getUserId());
-        }catch (Exception e){
+        } catch (Exception e) {
             userDto = new UserDto(order.getUserId(), "N/A", "N/A");
         }
         return OrderResponseDTO.builder()

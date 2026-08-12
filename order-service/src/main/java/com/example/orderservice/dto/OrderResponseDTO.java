@@ -7,12 +7,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonPropertyOrder({"orderId","product","price", "user"})
-public class OrderResponseDTO {
+public class OrderResponseDTO implements Serializable {
 
     @JsonProperty("orderId")
     private Long id;
