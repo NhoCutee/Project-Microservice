@@ -21,5 +21,5 @@ public class UserResponseDTO implements Serializable {
     private String email;
 
     @JsonProperty("orders")
-    private List<OrderDto> order;
+    private Object order;
 }

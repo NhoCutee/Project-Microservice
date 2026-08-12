@@ -41,11 +41,26 @@ public class UserServiceImpl implements UserService {
         System.out.println("Querying DB.....");
         return userRepository.findAll()
                 .stream()
-                .map(user -> UserResponseDTO.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .build())
+                .map( user -> {
+                   Object ordersData;
+                    try {
+                        List<OrderDto> orders = orderClient.getOrderByUserId(user.getId());
+                        if (orders == null || orders.isEmpty()) {
+                            ordersData = "This user dont have any orders";
+                        } else {
+                            ordersData = orders;
+                        }
+                    } catch (Exception e) {
+                        ordersData = "This user dont have any orders";
+                    }
+
+                   return UserResponseDTO.builder()
+                           .id(user.getId())
+                           .name(user.getName())
+                           .email(user.getEmail())
+                           .order(ordersData)
+                           .build();
+                })
                 .collect(Collectors.toList());
     }
 
@@ -58,17 +73,23 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponseDTO mapToResponseDTO(User user) {
-        List<OrderDto> orderDto;
-        try{
-            orderDto = orderClient.getOrderByUserId(user.getId());
-        }catch (Exception e){
-            orderDto = Collections.emptyList();
+        Object ordersData;
+        try {
+            List<OrderDto> orders = orderClient.getOrderByUserId(user.getId());
+            if (orders == null || orders.isEmpty()) {
+                ordersData = "This user dont have any orders";
+            } else {
+                ordersData = orders;
+            }
+        } catch (Exception e) {
+            ordersData = "This user dont have any orders";
         }
+
         return UserResponseDTO.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
-                .order(orderDto)
+                .order(ordersData)
                 .build();
     }
 
