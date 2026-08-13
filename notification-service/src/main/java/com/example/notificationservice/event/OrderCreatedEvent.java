@@ -1,4 +1,4 @@
-package com.example.orderservice.dto;
+package com.example.notificationservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDto implements Serializable {
+public class OrderCreatedEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
-    private String name;
-    private String email;
+    private Long orderId;
+    private Long userId;
+    private String product;
+    private Double price;
 }

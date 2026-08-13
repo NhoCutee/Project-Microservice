@@ -1,15 +1,18 @@
 package com.example.orderservice.service.impl;
 
 import com.example.orderservice.client.UserClient;
+import com.example.orderservice.config.KafkaTopicConfig;
 import com.example.orderservice.dto.OrderRequestDTO;
 import com.example.orderservice.dto.OrderResponseDTO;
 import com.example.orderservice.dto.UserDto;
+import com.example.orderservice.event.OrderCreatedEvent;
 import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.OrderRepository;
 import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +24,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final UserClient userClient;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
     @Override
     @CacheEvict(value = "allItem", allEntries = true)
@@ -32,6 +36,15 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         Order savedOrder = orderRepository.save(order);
+
+        OrderCreatedEvent event = OrderCreatedEvent.builder()
+                .orderId(savedOrder.getId())
+                .userId(savedOrder.getUserId())
+                .product(savedOrder.getProduct())
+                .price(savedOrder.getPrice())
+                .build();
+        kafkaTemplate.send("order-topic", event);
+        System.out.println("Da gui Kafka event: " + event);
         return mapToResponseDTO(savedOrder);
     }
 
