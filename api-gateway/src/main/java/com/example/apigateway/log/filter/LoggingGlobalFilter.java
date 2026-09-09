@@ -107,10 +107,13 @@ public class LoggingGlobalFilter implements GlobalFilter, Ordered {
             }
         };
 
-        return apiLogRepository.save(requestLog)
+        // Lưu REQUEST log chạy ngầm (Async), không bắt client phải chờ lưu database
+        apiLogRepository.save(requestLog)
                 .doOnError(e -> System.err.println("Lỗi lưu REQUEST log vào PostgreSQL: " + e.getMessage()))
-                .onErrorResume(e -> Mono.empty())
-                .then(chain.filter(exchange.mutate().response(decoratedResponse).build()));
+                .subscribe();
+
+        // Chuyển tiếp ngay lập tức đến service đích!
+        return chain.filter(exchange.mutate().response(decoratedResponse).build());
     }
 
     @Override
