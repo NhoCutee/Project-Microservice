@@ -1,0 +1,215 @@
+{
+  "info": {
+    "_postman_id": "9b165847-6947-4f2d-adfb-d94505215bee",
+    "name": "Microservices Project API Test Suite",
+    "description": "Full collection for testing API Gateway, User Service, Order Service, RabbitMQ, Notification Service, and Aiven PostgreSQL Logging.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "1. Tạo User Mới (Create User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "admin-1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyen Quang Huy\",\n  \"email\": \"huynguyenquang200612@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Tạo người dùng mới. Lưu thông tin vào H2/PostgreSQL của User Service."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Lấy Tất Cả Users (Kèm Orders qua Feign)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "admin-1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Lấy danh sách tất cả người dùng, User Service tự động dùng OpenFeign gọi sang Order Service để lấy danh sách đơn hàng tương ứng."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Lấy User Theo ID (Get User By ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "admin-1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết 1 người dùng theo ID (kèm theo các đơn hàng của user đó)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "4. Tạo Đơn Hàng Mới (Trigger RabbitMQ & SMTP Mail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"product\": \"MacBook Pro M3 Max\",\n  \"price\": 65000000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Tạo đơn hàng mới: Lưu vào PostgreSQL trên Aiven -> Gửi sự kiện sang RabbitMQ -> Notification Service nhận sự kiện và gửi Email qua Gmail SMTP."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Lấy Tất Cả Đơn Hàng (Get All Orders - Redis Cache)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Lấy danh sách tất cả đơn hàng kèm thông tin User (được cache qua Redis)."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Lấy Chi Tiết Đơn Hàng Theo ID (Get Order By ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "1"
+              ]
+            },
+            "description": "Lấy chi tiết 1 đơn hàng theo Order ID."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Lấy Đơn Hàng Của User (Get Orders By User ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/user/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "user",
+                "1"
+              ]
+            },
+            "description": "Lấy toàn bộ đơn hàng của User có ID = 1 (API này được FeignClient gọi ngầm)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# Environment variables (NEVER COMMIT TO GIT)
+.env
+*.env
+
+# Build outputs
+target/
+**/target/
+build/
+**/build/
+
+# IDE files
+.idea/
+**/.idea/
+*.iml
+**/*.iml
+.vscode/
+**/.vscode/
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db

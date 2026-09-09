@@ -1,25 +1,27 @@
 package com.example.notificationservice.service;
 
+import com.example.notificationservice.config.RabbitMQConfig;
 import com.example.notificationservice.event.OrderCreatedEvent;
-import org.springframework.kafka.annotation.KafkaListener;
+import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
 
-    @KafkaListener(
-            topics = "order-topic",
-            groupId = "notification-group",
-            containerFactory = "kafkaListenerContainerFactory"
-    )
+    private final EmailService emailService;
+
+    @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void handleOrderCreated(OrderCreatedEvent event) {
         System.out.println("=================================================");
-        System.out.println("[NOTIFICATION SERVICE] Nhận sự kiện từ Kafka:");
-        System.out.println("   -> Mã Đơn Hàng: " + event.getOrderId());
-        System.out.println("   -> Mã Người Dùng: " + event.getUserId());
-        System.out.println("   -> Sản Phẩm: " + event.getProduct());
-        System.out.println("   -> Giá Tiền: " + event.getPrice());
-        System.out.println("   -> Tự động gửi Email/SMS thông báo thành công!");
+        System.out.println("[NOTIFICATION SERVICE] Nhan su kien tu RabbitMQ:");
+        System.out.println("   -> Ma Don Hang: " + event.getOrderId());
+        System.out.println("   -> Ma Nguoi Dung: " + event.getUserId());
+        System.out.println("   -> San Pham: " + event.getProduct());
+        System.out.println("   -> Gia Tien: " + event.getPrice());
+        emailService.sendOrderEmail(event);
+        System.out.println("   -> Email thong bao da duoc gui thanh cong!");
         System.out.println("=================================================");
     }
 }

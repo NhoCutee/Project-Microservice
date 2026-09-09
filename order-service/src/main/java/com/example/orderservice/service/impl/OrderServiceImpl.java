@@ -1,7 +1,7 @@
 package com.example.orderservice.service.impl;
 
 import com.example.orderservice.client.UserClient;
-import com.example.orderservice.config.KafkaTopicConfig;
+import com.example.orderservice.config.RabbitMQConfig;
 import com.example.orderservice.dto.OrderRequestDTO;
 import com.example.orderservice.dto.OrderResponseDTO;
 import com.example.orderservice.dto.UserDto;
@@ -10,9 +10,9 @@ import com.example.orderservice.model.Order;
 import com.example.orderservice.repository.OrderRepository;
 import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final UserClient userClient;
-    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     @CacheEvict(value = "allItem", allEntries = true)
@@ -43,8 +43,15 @@ public class OrderServiceImpl implements OrderService {
                 .product(savedOrder.getProduct())
                 .price(savedOrder.getPrice())
                 .build();
-        kafkaTemplate.send("order-topic", event);
-        System.out.println("Da gui Kafka event: " + event);
+
+        // Gửi message vào RabbitMQ
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE,
+                RabbitMQConfig.ROUTING_KEY,
+                event
+        );
+        System.out.println("Da gui RabbitMQ event: " + event);
+
         return mapToResponseDTO(savedOrder);
     }
 
