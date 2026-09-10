@@ -10,9 +10,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // Tên Exchange, Queue, Routing Key
-    public static final String EXCHANGE   = "order.exchange";
-    public static final String QUEUE      = "order.queue";
+    public static final String EXCHANGE    = "order.exchange";
+    public static final String QUEUE       = "order.queue";
+    public static final String DEBUG_QUEUE = "order.debug.queue";
     public static final String ROUTING_KEY = "order.created";
 
     // 1. Tạo Exchange kiểu Direct
@@ -21,17 +21,30 @@ public class RabbitMQConfig {
         return new DirectExchange(EXCHANGE);
     }
 
-    // 2. Tạo Queue lưu tin nhắn
+    // 2. Queue chính dành cho notification-service (Tự động gửi mail)
     @Bean
     public Queue orderQueue() {
-        return new Queue(QUEUE, true); // true = durable (lưu lại khi restart)
+        return new Queue(QUEUE, true);
     }
 
-    // 3. Bind Queue vào Exchange với Routing Key
     @Bean
     public Binding orderBinding(Queue orderQueue, DirectExchange orderExchange) {
         return BindingBuilder
                 .bind(orderQueue)
+                .to(orderExchange)
+                .with(ROUTING_KEY);
+    }
+
+    // 3. Queue RIÊNG DÀNH CHO BẠN DEBUG (Không có ai tiêu thụ, tin nhắn nằm im trên Web RabbitMQ)
+    @Bean
+    public Queue orderDebugQueue() {
+        return new Queue(DEBUG_QUEUE, true);
+    }
+
+    @Bean
+    public Binding orderDebugBinding(Queue orderDebugQueue, DirectExchange orderExchange) {
+        return BindingBuilder
+                .bind(orderDebugQueue)
                 .to(orderExchange)
                 .with(ROUTING_KEY);
     }

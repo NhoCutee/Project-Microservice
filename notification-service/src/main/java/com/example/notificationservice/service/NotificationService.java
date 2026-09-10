@@ -12,6 +12,7 @@ public class NotificationService {
 
     private final EmailService emailService;
 
+    // Tu dong lay tin nhan tu order.queue va gui mail ngay lap tuc!
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void handleOrderCreated(OrderCreatedEvent event) {
         System.out.println("=================================================");

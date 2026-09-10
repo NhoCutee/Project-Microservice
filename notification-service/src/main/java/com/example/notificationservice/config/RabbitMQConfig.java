@@ -15,23 +15,34 @@ public class RabbitMQConfig {
 
     public static final String EXCHANGE    = "order.exchange";
     public static final String QUEUE       = "order.queue";
+    public static final String DEBUG_QUEUE = "order.debug.queue";
     public static final String ROUTING_KEY = "order.created";
 
-    // Khai báo lại Exchange + Queue + Binding ở đây
-    // để notification-service tự tạo nếu chưa tồn tại
     @Bean
     public DirectExchange orderExchange() {
         return new DirectExchange(EXCHANGE);
     }
 
+    // Queue 1: Tự động gửi email
     @Bean
     public Queue orderQueue() {
-        return new Queue(QUEUE, true); // durable = true
+        return new Queue(QUEUE, true);
     }
 
     @Bean
     public Binding orderBinding(Queue orderQueue, DirectExchange orderExchange) {
         return BindingBuilder.bind(orderQueue).to(orderExchange).with(ROUTING_KEY);
+    }
+
+    // Queue 2: Giữ tin nhắn cho bạn xem và debug trên Web UI
+    @Bean
+    public Queue orderDebugQueue() {
+        return new Queue(DEBUG_QUEUE, true);
+    }
+
+    @Bean
+    public Binding orderDebugBinding(Queue orderDebugQueue, DirectExchange orderExchange) {
+        return BindingBuilder.bind(orderDebugQueue).to(orderExchange).with(ROUTING_KEY);
     }
 
     // JSON converter để deserialize message thành OrderCreatedEvent
